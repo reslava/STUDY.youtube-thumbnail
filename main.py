@@ -19,22 +19,23 @@ def create_glow(image: Image, glow_amount: int = 12) -> Image:
     glow = bg.filter(ImageFilter.GaussianBlur(glow_amount))
     return glow
 
-def add_image(base_image: Image, image: Image, size: tuple[int, int], loc: tuple[int, int], rotation: int, glow: bool = False):
+def add_image(base_image: Image, image: Image, size: tuple[int, int], loc: tuple[int, int], rotation: int, glow: bool = False, glow_amount: int = 12):
     """
     size: (width, height)
     loc: (x, y)
     rotation: angle in degrees
     glow: whether to add glow effect
+    glow_amount: intensity of the glow (blur radius)
     """
     image = image.resize(size)
     image = image.rotate(rotation, expand=True)
-    
+
     if glow:
-        glow_image = create_glow(image)
+        glow_image = create_glow(image, glow_amount)
         # Adjust location to account for glow margin
-        glow_loc = (loc[0] - 15, loc[1] - 15)
+        glow_loc = (loc[0] - glow_amount, loc[1] - glow_amount)
         base_image.paste(glow_image, glow_loc, glow_image)
-    
+
     base_image.paste(image, loc, image)
 
 def make_thumbnail(texts: dict[str, tuple[int, tuple[int, int], tuple[int, int, int], tuple[int, int, int], int]], images: dict[str, tuple[int, int]]):
@@ -67,14 +68,14 @@ def main() -> None:
         "Creating youtube thumbnails with Python": (73, (20, 470), (255, 255, 255), (50, 50, 50), 7),
         "Rafa Eslava": (65, (1010, 310), (255, 223, 89), (0, 0, 0), 4)}  
     images = {
-        "python.webp": ((30, 10), True),  # Added glow parameter
-        "rafa.png": ((1280-220, 720-220), True)}  # No glow
+        "python.webp": ((30, 10), True), 
+        "rafa.png": ((1280-220, 720-220), True)}  
     
     base_image = Image.open("background.png")
     for img_path, (loc, has_glow) in images.items():
         image = Image.open(img_path)
         add_image(base_image, image, size=image.size, loc=loc, rotation=0, glow=has_glow)
-    
+        
     # Add text
     draw = ImageDraw.Draw(base_image)
     for text, (font_size, pos, font_color, stroke_color, stroke_width) in texts.items():
